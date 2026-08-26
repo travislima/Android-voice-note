@@ -1,7 +1,12 @@
 package com.travislima.voicenote
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.widget.EditText
@@ -70,10 +75,41 @@ class MainActivity : AppCompatActivity() {
 
         refreshPreview()
         if (prefs().getString(KEY_EMAIL, null).isNullOrBlank()) promptEmail()
+        if (BuildConfig.DEBUG) registerDebugReceiver()
+    }
+
+    /**
+     * Debug builds only: lets automated tests inject utterances into the same
+     * path the speech recogniser uses, e.g.
+     *   adb shell am broadcast -a com.travislima.voicenote.DEBUG_UTTERANCE \
+     *       --es text "heading notice of motion"
+     */
+    private var debugReceiver: BroadcastReceiver? = null
+
+    private fun registerDebugReceiver() {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val text = intent?.getStringExtra("text") ?: return
+                pendingPartial = null
+                when (parser.feed(text)) {
+                    CommandParser.Event.FINISH -> finishAndSend()
+                    else -> refreshPreview()
+                }
+            }
+        }
+        debugReceiver = receiver
+        val filter = IntentFilter("com.travislima.voicenote.DEBUG_UTTERANCE")
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(receiver, filter)
+        }
     }
 
     override fun onDestroy() {
         engine.stop()
+        debugReceiver?.let { unregisterReceiver(it) }
         super.onDestroy()
     }
 
