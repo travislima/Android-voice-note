@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Voice Note</string>
+
+    <string name="btn_record">Start dictating</string>
+    <string name="btn_stop">Stop</string>
+    <string name="btn_send">Finish &amp; email document</string>
+    <string name="btn_clear">Clear</string>
+    <string name="btn_email">My email</string>
+
+    <string name="status_idle">Tap Start dictating. Say \"paragraph\", \"heading\", \"quote\" / \"end quote\", \"footnote\" / \"end footnote\", or \"end\" to finish and email.</string>
+    <string name="status_listening">Listening…</string>
+    <string name="status_stopped">Paused.</string>
+    <string name="status_sent">Document exported — choose your email app to send.</string>
+
+    <string name="preview_hint">Your dictation will appear here, formatted as it will look in the document.</string>
+
+    <string name="email_dialog_title">Email the document to</string>
+    <string name="email_hint">you@example.com</string>
+    <string name="email_subject">Dictated document — %1$s</string>
+    <string name="email_body">Dictated with Voice Note. The formatted document is attached as .docx (opens in OnlyOffice, Word, LibreOffice).</string>
+    <string name="email_chooser">Send document with…</string>
+
+    <string name="confirm_clear">Discard the current dictation?</string>
+    <string name="err_mic_permission">Microphone permission is required to dictate.</string>
+    <string name="err_no_recognizer">No speech recognition service is available on this device.</string>
+    <string name="err_empty">Nothing dictated yet.</string>
+</resources>
