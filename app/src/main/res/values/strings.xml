@@ -10,6 +10,10 @@
 
     <string name="status_idle">Tap Start dictating. Say \"paragraph\", \"heading\", \"quote\" / \"end quote\", \"footnote\" / \"end footnote\", or \"end\" to finish and email.</string>
     <string name="status_listening">Listening…</string>
+    <string name="status_listening_cfg">Listening… (%1$s)</string>
+    <string name="status_trying">Recogniser not responding — trying %1$s</string>
+    <string name="status_error">Recogniser error: %1$s — retrying</string>
+    <string name="err_all_configs">Speech recognition keeps failing (%1$s). Check that a voice input engine is enabled in Settings → General management → Keyboard/Voice input, or install/update the Google app or Samsung voice input.</string>
     <string name="status_stopped">Paused.</string>
     <string name="status_sent">Document exported — choose your email app to send.</string>
 

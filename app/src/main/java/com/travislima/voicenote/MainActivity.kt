@@ -44,6 +44,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        findViewById<TextView>(R.id.title).text =
+            getString(R.string.app_name) + "  v" + BuildConfig.VERSION_NAME
         preview = findViewById(R.id.preview)
         scroll = findViewById(R.id.scroll)
         status = findViewById(R.id.status)
@@ -130,7 +132,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun startDictation() {
         engine.start()
-        recordButton.text = getString(R.string.btn_stop)
+        recordButton.text =
+            getString(if (engine.isListening) R.string.btn_stop else R.string.btn_record)
     }
 
     private fun finishAndSend() {
