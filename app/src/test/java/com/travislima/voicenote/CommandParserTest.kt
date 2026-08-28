@@ -73,6 +73,60 @@ class CommandParserTest {
         assertEquals("The first point. The second point", doc.blocks[0].text.toString())
     }
 
+    // --- Recogniser-styled input: auto-capitals, auto-punctuation, newlines ---
+
+    @Test
+    fun autoPunctuatedCommandsAreRecognised() {
+        val p = CommandParser()
+        p.feed("Heading, heads of argument.")
+        p.feed("Paragraph, may it please the court.")
+        p.feed("New paragraph. The appellant submits the following.")
+        val doc = p.finalizeDocument()
+        assertEquals(3, doc.blocks.size)
+        assertTrue(doc.blocks[0] is Block.Heading)
+        assertEquals("HEADS OF ARGUMENT", doc.blocks[0].text.toString())
+        assertEquals("May it please the court.", doc.blocks[1].text.toString())
+        assertEquals("The appellant submits the following.", doc.blocks[2].text.toString())
+    }
+
+    @Test
+    fun recogniserNewlinesBecomeParagraphs() {
+        val p = CommandParser()
+        p.feed("The first point.\n\nThe second point.")
+        val doc = p.finalizeDocument()
+        assertEquals(2, doc.blocks.size)
+        assertEquals("The first point.", doc.blocks[0].text.toString())
+        assertEquals("The second point.", doc.blocks[1].text.toString())
+    }
+
+    @Test
+    fun singleNewlineBecomesLineBreak() {
+        val p = CommandParser()
+        p.feed("care of chambers\nfifth floor")
+        val doc = p.finalizeDocument()
+        assertEquals(1, doc.blocks.size)
+        assertTrue(doc.blocks[0].text.toString().contains("\n"))
+    }
+
+    @Test
+    fun punctuatedQuoteAndFootnoteCommands() {
+        val p = CommandParser()
+        p.feed("The court held, quote, justice must be done. End quote. Which supports us.")
+        p.feed("As noted, footnote, see page five. End footnote. Above.")
+        val doc = p.finalizeDocument()
+        assertTrue(doc.blocks.any { it is Block.Quote })
+        val quote = doc.blocks.first { it is Block.Quote }
+        assertEquals("Justice must be done.", quote.text.toString())
+        assertEquals(1, doc.blocks.sumOf { it.footnotes.size })
+    }
+
+    @Test
+    fun capitalisedEndUtteranceFinishes() {
+        val p = CommandParser()
+        p.feed("Some dictated text.")
+        assertEquals(CommandParser.Event.FINISH, p.feed("End."))
+    }
+
     @Test
     fun britishSpellingApplied() {
         val p = CommandParser()

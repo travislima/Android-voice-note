@@ -42,7 +42,14 @@ class CommandParser {
             return Event.FINISH
         }
 
-        val words = trimmed.split(Regex("\\s+"))
+        // Recognisers with auto-formatting turn the spoken words "new paragraph" /
+        // "new line" into literal newline characters. Convert them back into
+        // commands rather than losing them as whitespace.
+        val normalized = trimmed
+            .replace(Regex("\n{2,}"), " new paragraph ")
+            .replace("\n", " new line ")
+
+        val words = normalized.split(Regex("\\s+"))
         var i = 0
         while (i < words.size) {
             val w = clean(words[i])
@@ -50,7 +57,7 @@ class CommandParser {
 
             when {
                 // ---- two-word commands ----
-                w == "new" && next == "paragraph" -> { endParagraph(); i += 2 }
+                (w == "new" || w == "next") && next == "paragraph" -> { endParagraph(); i += 2 }
                 w == "new" && next == "line" -> { appendText("\n"); i += 2 }
                 w == "end" && next == "heading" -> { endParagraph(); i += 2 }
                 (w == "end" || w == "close") && next == "quote" -> { endQuote(); i += 2 }
@@ -71,13 +78,18 @@ class CommandParser {
                 w == "comma" -> { appendPunct(","); i += 1 }
                 w == "colon" -> { appendPunct(":"); i += 1 }
                 w == "semicolon" -> { appendPunct(";"); i += 1 }
-                else -> { appendWord(words[i]); i += 1 }
+                else -> {
+                    if (w.isEmpty()) appendPunct(words[i]) else appendWord(words[i])
+                    i += 1
+                }
             }
         }
         return Event.CHANGED
     }
 
-    private fun clean(word: String) = word.lowercase().trim('.', ',', '!', '?', ';', ':')
+    // Recognisers attach punctuation and capitals to words ("Paragraph," / "paragraph.")
+    // so commands are matched on the bare lower-case word.
+    private fun clean(word: String) = word.lowercase().trim { !it.isLetterOrDigit() }
 
     // ---------------- block handling ----------------
 
@@ -100,6 +112,14 @@ class CommandParser {
 
     private fun closeBlock() {
         endFootnote()
+        // Auto-punctuating recognisers end utterances with a full stop;
+        // headings shouldn't keep it.
+        if (current is Block.Heading) {
+            val sb = current!!.text
+            while (sb.isNotEmpty() && (sb.last() == '.' || sb.last() == ',')) {
+                sb.deleteCharAt(sb.length - 1)
+            }
+        }
         current = null
         mode = Mode.BODY
     }
@@ -145,7 +165,7 @@ class CommandParser {
 
     private fun appendWord(raw: String) {
         val sb = target()
-        val word = BritishSpelling.normaliseWord(raw)
+        val word = BritishSpelling.normalise(raw)
         val cased = when {
             mode == Mode.HEADING && !inFootnote -> word.uppercase()
             needsCapital(sb) -> word.replaceFirstChar { it.uppercase() }
